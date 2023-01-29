@@ -272,21 +272,57 @@ class DATA:
             return dic
         return sort(map(rows or self.rows , fun) , lt('dist'))
     
-    def half():
-        #TODO:implement
-        raise NotImplementedError()
-    
-    def cluster():
-        #TODO:implement
-        raise NotImplementedError()
-    
-    def sway():
-        #TODO:implement
-        raise NotImplementedError()
-    
+    def half(self , rows , cols , above):
+        def dist(row1 , row2):
+            return self.dist(row1 , row2 , cols)
 
-
+        def project(row):
+            dic = {}
+            dic['row'] = row
+            dic['dist'] = cosine(dist(row , A) , dist(row , B) , c)
+            return dic
         
+        rows = rows or self.rows
+        some = many(rows , the['Sample'])
+        A = above or any(some)
+        B = self.around(A , some)[the['Far'] * len(rows) // 1].row
+        c = dist(A , B)
+        left , right = {} , {}
+        for n , tmp in sort(map(rows , project) , lt('dist')):
+            if n <= len(rows) // 2:
+                push(left , tmp.row)
+                mid = tmp.row
+            else:
+                push(right , tmp.row)
+        return left , right , A , B , mid , c
+        
+    
+    def cluster(self , rows , min , cols , above):
+        rows = rows or self.rows
+        min = min or len(rows) ** the['min']
+        cols = cols or self.cols.x
+        node = {}
+        node['data'] = self.clone(rows)
+        if len(rows) > 2 * min:
+            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows , cols , above)
+            node['left'] = self.cluster(left , min , cols , node['A'])
+            node['right'] = self.cluster(right , min , cols , node['B'])
+        return node
+    
+    def sway(self , rows , min , cols , above):
+        rows = rows or self.rows
+        min = min or len(rows) ** the['min']
+        cols = cols or self.cols.x
+        node = {}
+        node['data'] = self.clone(rows)
+        if len(rows) > 2 * min:
+            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows , cols , above)
+            if self.better(node['B'] , node['A']):
+                left , right , node['A'] , node['B'] = right , left , node['B'] , node['A']
+            node['left'] = self.sway(left , min , cols , node['A'])
+        return node
+
+       
 ## Misc
 
 def show():
