@@ -225,9 +225,12 @@ class DATA:
         else:
             self.cols = COLS(t)
     
-    def clone():
-        #TODO:implement
-        raise NotImplementedError()
+    def clone(self , init):
+        data = DATA(self.cols.names)
+        def fun(x):
+            data.add(x)
+        map(init or {} , fun)
+        return data
             
     def stats(self , what , cols , nPlaces):
         def fun(k , col):
@@ -244,17 +247,30 @@ class DATA:
             res[k] = u[k]
         return res
     
-    def better():
-        #TODO:implement
-        raise NotImplementedError()
+    def better(self , row1 , row2):
+        s1 , s2 , ys = 0 , 0 , self.cols.y
+        for _ , col in ys:
+            x = col.norm(row1.cells[col.at])
+            y = col.norm(row2.cells[col.at])
+            s1 -= math.exp(col.w * (x - y) / len(ys))
+            s2 -= math.exp(col.w * (y - x) / len(ys))
+        return (s1 / len(ys)) < (s2 / len(ys))
+
     
-    def dist():
-        #TODO:implement
-        raise NotImplementedError()
-    
-    def around():
-        #TODO:implement
-        raise NotImplementedError()
+    def dist(self , row1 , row2 , cols):
+        n , d = 0 , 0
+        for _ , col in (cols or self.cols.x):
+            n += 1
+            d += col.dist(row1.cells[col.at] , row2.cells[col.at]) ** the['p']
+        return (d / n) ** (1 / the['p']) 
+
+    def around(self , row1 , rows , cols):
+        def fun(row2):
+            dic = {}
+            dic['row'] = row2
+            dic['dist'] = self.dist(row1 , row2 , cols)
+            return dic
+        return sort(map(rows or self.rows , fun) , lt('dist'))
     
     def half():
         #TODO:implement
@@ -328,9 +344,10 @@ def kap(t:dict, fun):
 def sort(t:list, fun = None):
     return sorted(t, key=fun)
 
-def lt():
-    #TODO:implement
-    raise NotImplementedError()
+def lt(x: str):
+    def fun(dic):
+        return dic[x]
+    return fun
 
 # ss; return list of table keys, sorted
 def keys(t:list):
