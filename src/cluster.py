@@ -338,8 +338,15 @@ class DATA:
 ## Misc
 
 def show(node, what, cols, nPlaces, *lvl):
-    #TODO:implement
-    raise NotImplementedError()
+    if node:
+        lvl = lvl or 0
+        res = '| ' * lvl + len(node['data'].rows) + '  '
+        if not node['left'] or lvl == 0:
+            print(res + o(node['data'].stats("mid",node['data'].cols.y,nPlaces)))
+        else:
+            print(res)
+        show(node['left'], what, cols, nPlaces, lvl+1)
+        show(node['right'], what, cols, nPlaces, lvl+1)
 
 
 ## Numerics 
