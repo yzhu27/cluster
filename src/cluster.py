@@ -92,9 +92,12 @@ class SYM:
     def rnd(self, x, *n):
         return x
 
-    def dist():
-        #TODO:implement
-        raise NotImplementedError()
+    def dist(self, s1, s2):
+        if s1 == '?' and s2 == '?':
+            return 1
+        elif s1 == s2:
+            return 0
+        else: return 1
     
 #line 53
 #Summarizes a stream of numbers.
@@ -145,13 +148,21 @@ class NUM:
         
     def rnd(self, x, n): return x if x=="?" else rnd(x, n)
 
-    def norm():
-        #TODO:implement
-        raise NotImplementedError()
+    def norm(self, n):
+        if n == '?':
+            return n
+        else:
+            return (n - self.lo) / (self.hi - self.lo)
     
-    def dist():
-        #TODO:implement
-        raise NotImplementedError()
+    def dist(self, n1, n2):
+        if n1 == '?' and n2 == '?': return 1
+        n1 = self.norm(n1)
+        n2 = self.norm(n2)
+        if n1 == '?':
+            n1 = (n2 < .5 and 1 or 0)
+        if n2 == '?':
+            n2 = (n1 < .5 and 1 or 0)
+        return abs(n1 - n2)
 
 
 
@@ -257,14 +268,15 @@ class DATA:
         return (s1 / len(ys)) < (s2 / len(ys))
 
     
-    def dist(self , row1 , row2 , cols):
+    def dist(self , row1 , row2 , *cols):
         n , d = 0 , 0
-        for _ , col in (cols or self.cols.x):
+        if cols is None: cols = self.cols.x
+        for _ , col in self.cols.x.items():
             n += 1
             d += col.dist(row1.cells[col.at] , row2.cells[col.at]) ** the['p']
         return (d / n) ** (1 / the['p']) 
 
-    def around(self , row1 , rows , cols):
+    def around(self , row1 , *rows , **cols):
         def fun(row2):
             dic = {}
             dic['row'] = row2
@@ -325,7 +337,7 @@ class DATA:
        
 ## Misc
 
-def show():
+def show(node, what, cols, nPlaces, *lvl):
     #TODO:implement
     raise NotImplementedError()
 
@@ -351,9 +363,12 @@ def rnd(n, nPlaces=3):
     mult = 10**nPlaces
     return math.floor(n * mult + 0.5) / mult
 
-def cosine():
-    #TODO:implement
-    raise NotImplementedError()
+# n,n;  find x,y from a line connecting `a` to `b`
+def cosine(a, b, c):
+    x1 = (a**2 + c**2 - b**2) / (2*c)
+    x2 = math.max(0, math.min(1, x1))
+    y = (a**2 - x2**2)**.5
+    return x2, y
 
 ## Lists
 
@@ -389,17 +404,20 @@ def lt(x: str):
 def keys(t:list):
     return sorted(kap(t, lambda k, _:k))
 
+# any; push `x` to end of list; return `x` 
 def push(t:dict, x):
     t[len(t)] = x
     return x
 
-def any():
-    #TODO:implement
-    raise NotImplementedError()
+# x; returns one items at random
+def any(t):
+    return list(t)[rint(len(t))]
 
-def many():
-    #TODO:implement
-    raise NotImplementedError()
+# t1; returns some items from `t`
+def many(t, n):
+    u = {}
+    for i in range(0, n):
+        u[i] = any(t)
 
 ## Strings
 
@@ -429,7 +447,7 @@ def o(t , *isKeys): #--> s; convert `t` to a string. sort named keys.
     def concat(tmp:dict):
         res = []
         for k , v in tmp.items():
-            res.append(':' + k)
+            res.append(':' + str(k))
             res.append(v)
         return res
     return '{' + ' '.join(concat(tmp)) + '}'
@@ -573,28 +591,41 @@ if __name__=='__main__':
     eg("data","read DATA csv", datafun)
 
     def clonefun():
-        #TODO:implement
-        raise NotImplementedError()
-    eg("clone", "duplicate structure", clonefun)
+        data1 = DATA(the["file"])
+        data2 = data1.clone(data1.rows)
+        return len(data1.rows) == len(data2.rows) and\
+               data1.cols.y[0].w == data2.cols.y[0].w and\
+               data1.cols.x[0].at == data2.cols.x[0].at and\
+               len(data1.cols.x) == len(data2.cols.x)
+    #eg("clone", "duplicate structure", clonefun)
 
     def aroundfun():
-        #TODO:implement
-        raise NotImplementedError()
+        data = DATA(the["file"])
+        print(str(0)+"  "+str(0)+"  "+o(data.rows[0].cells))
+        for n, t in enumerate(data.around(data.rows[0])):
+            if n % 50 == 0:
+                print(str(n)+"  "+str(rnd(t.dist, 2))+" "+o(t.row.cells))
     eg("around", "sorting nearest neighbors", aroundfun)
 
     def halffun():
-        #TODO:implement
-        raise NotImplementedError()
+        data = DATA(the["file"])
+        left, right, A, B, mid, c = data.half()
+        print(str(len(left))+"   "+str(len(left))+" "+str(len(data.rows)))
+        print(o(A.cells)+"  "+str(c))
+        print(o(mid.cells))
+        print(o(B.cells))
     eg("half", "1-level bi-clustering", aroundfun)
 
     def clusterfun():
-        #TODO:implement
-        raise NotImplementedError()
+        data = DATA(the["file"])
+        show(data.cluster(), 'mid', data.cols.y, 1)
+        return True
     eg("cluster", "N-level bi-clustering", clusterfun)
 
     def optimizefun():
-        #TODO:implement
-        raise NotImplementedError()
+        data = DATA(the["file"])
+        show(data.sway(), 'mid', data.cols.y, 1)
+        return True
     eg("optimize", "semi-supervised optimization", optimizefun)
 
 
