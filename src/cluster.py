@@ -23,15 +23,15 @@ cluster.lua : an example csv reader script
 USAGE: cluster.lua  [OPTIONS] [-g ACTION]
 
 OPTIONS:
+  -F  --Far     distance to "faraway"  = .95
+  -S  --Sample  sampling data size     = 512
   -d  --dump    on crash, dump stack   = false
   -f  --file    name of file           = ../etc/data/auto93.csv
-  -F  --Far     distance to "faraway"  = .95
   -g  --go      start-up action        = data
   -h  --help    show help              = false
   -m  --min     stop clusters at N^min = .5
   -p  --p       distance coefficient   = 2
   -s  --seed    random number seed     = 937162211
-  -S  --Sample  sampling data size     = 512
 
 ACTIONS:
 """
@@ -168,7 +168,7 @@ class NUM:
 
 class COLS:
     def __init__(self, names):
-        self.names = names
+        self.names = names #dic
         self.all = {}
         self.klass = None
         self.x = {}
@@ -224,7 +224,8 @@ class DATA:
             Csv(src , fun)
         else:
             if src:
-                map(src , fun)
+                #map(src , fun)
+                self.add(src)
             else:
                 map({} , fun)
     
@@ -276,13 +277,15 @@ class DATA:
             d += col.dist(row1.cells[col.at] , row2.cells[col.at]) ** the['p']
         return (d / n) ** (1 / the['p']) 
 
-    def around(self , row1 , *rows , **cols):
+    def around(self , row1 , *rows , **cols): #--> list[dict{row: , dist: }]
         def fun(row2):
             dic = {}
             dic['row'] = row2
             dic['dist'] = self.dist(row1 , row2 , cols)
             return dic
-        return sort(map(rows or self.rows , fun) , lt('dist'))
+        tmp = map(rows or self.rows , fun) #dic{dic{}}
+        tmp = list(tmp.values()) # [dict]
+        return sort(tmp , lt('dist')) 
     
     def half(self , rows , cols , above):
         def dist(row1 , row2):
@@ -399,7 +402,7 @@ def kap(t:dict, fun):
     return u
 
 # t; return `t`,  sorted by `fun` (default= `<`)
-def sort(t:list, fun = None):
+def sort(t:list, fun = lambda x: x.keys()):
     return sorted(t, key=fun)
 
 def lt(x: str):
@@ -604,14 +607,22 @@ if __name__=='__main__':
                data1.cols.y[0].w == data2.cols.y[0].w and\
                data1.cols.x[0].at == data2.cols.x[0].at and\
                len(data1.cols.x) == len(data2.cols.x)
-    #eg("clone", "duplicate structure", clonefun)
+    eg("clone", "duplicate structure", clonefun)
 
     def aroundfun():
         data = DATA(the["file"])
-        print(str(0)+"  "+str(0)+"  "+o(data.rows[0].cells))
+        tmp = []
+        for num in data.rows[0].cells.values():
+            tmp.append(str(num))
+        print(str(0)+"  "+str(0)+"  "+ '{' + ' '.join(tmp) + '}')
         for n, t in enumerate(data.around(data.rows[0])):
-            if n % 50 == 0:
-                print(str(n)+"  "+str(rnd(t.dist, 2))+" "+o(t.row.cells))
+            if (n+1) % 50 == 0:
+                if n == 0:
+                    continue
+                tmp = []
+                for num in t['row'].cells.values():
+                    tmp.append(str(num))
+                print(str(n)+"  "+str(rnd(t['dist'], 2))+" "+ '{' + ' '.join(tmp) + '}')
     eg("around", "sorting nearest neighbors", aroundfun)
 
     def halffun():
