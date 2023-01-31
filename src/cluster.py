@@ -287,9 +287,9 @@ class DATA:
         tmp = list(tmp.values()) # [dict]
         return sort(tmp , lt('dist')) 
     
-    def half(self , rows , cols , above):
+    def half(self , **kwargs):
         def dist(row1 , row2):
-            return self.dist(row1 , row2 , cols)
+            return self.dist(row1 , row2 , kwargs['cols'] if 'cols' in kwargs else None)
 
         def project(row):
             dic = {}
@@ -297,10 +297,10 @@ class DATA:
             dic['dist'] = cosine(dist(row , A) , dist(row , B) , c)
             return dic
         
-        rows = rows or self.rows
+        rows = kwargs['rows'] if 'rows' in kwargs else self.rows
         some = many(rows , the['Sample'])
-        A = above or any(some)
-        B = self.around(A , some)[the['Far'] * len(rows) // 1].row
+        A = kwargs['above'] if 'above' in kwargs else any(some)
+        B = self.around(A , some)[the['Far'] * len(rows) // 1].row # TODO:here needs fix
         c = dist(A , B)
         left , right = {} , {}
         for n , tmp in sort(map(rows , project) , lt('dist')):
@@ -312,14 +312,14 @@ class DATA:
         return left , right , A , B , mid , c
         
     
-    def cluster(self , rows , min , cols , above):
-        rows = rows or self.rows
-        min = min or len(rows) ** the['min']
-        cols = cols or self.cols.x
+    def cluster(self , **kwargs):
+        rows = kwargs['rows'] if 'rows' in kwargs else self.rows
+        min = kwargs['min'] if 'min' in kwargs else len(rows) ** the['min']
+        cols = kwargs['cols'] if 'cols' in kwargs else self.cols.x
         node = {}
         node['data'] = self.clone(rows)
         if len(rows) > 2 * min:
-            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows , cols , above)
+            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows=rows , cols=cols , above=kwargs['above'] if 'above' in kwargs else None)
             node['left'] = self.cluster(left , min , cols , node['A'])
             node['right'] = self.cluster(right , min , cols , node['B'])
         return node
@@ -421,14 +421,14 @@ def push(t:dict, x):
 
 # x; returns one items at random
 def any(t):
-    return list(t)[rint(len(t))]
+    return list(t.values())[rint(0,len(t)-1)]
 
 # t1; returns some items from `t`
 def many(t, n):
     u = {}
     for i in range(0, n):
         u[i] = any(t)
-
+    return u
 ## Strings
 
 
@@ -622,7 +622,7 @@ if __name__=='__main__':
                 tmp = []
                 for num in t['row'].cells.values():
                     tmp.append(str(num))
-                print(str(n)+"  "+str(rnd(t['dist'], 2))+" "+ '{' + ' '.join(tmp) + '}')
+                print(str(n+1)+"  "+str(rnd(t['dist'], 2))+" "+ '{' + ' '.join(tmp) + '}')
     eg("around", "sorting nearest neighbors", aroundfun)
 
     def halffun():
@@ -632,7 +632,7 @@ if __name__=='__main__':
         print(o(A.cells)+"  "+str(c))
         print(o(mid.cells))
         print(o(B.cells))
-    eg("half", "1-level bi-clustering", aroundfun)
+    eg("half", "1-level bi-clustering", halffun)
 
     def clusterfun():
         data = DATA(the["file"])
