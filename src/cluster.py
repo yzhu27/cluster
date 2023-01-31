@@ -300,15 +300,15 @@ class DATA:
         rows = kwargs['rows'] if 'rows' in kwargs else self.rows
         some = many(rows , the['Sample'])
         A = kwargs['above'] if 'above' in kwargs else any(some)
-        B = self.around(A , some)[the['Far'] * len(rows) // 1].row # TODO:here needs fix
+        B = self.around(row1=A , rows=some)[int(the['Far'] * len(rows) // 1)]['row']
         c = dist(A , B)
         left , right = {} , {}
-        for n , tmp in sort(map(rows , project) , lt('dist')):
+        for n , tmp in enumerate(sort(list(map(rows , project).values()) , lt('dist'))):
             if n <= len(rows) // 2:
-                push(left , tmp.row)
-                mid = tmp.row
+                push(left , tmp['row'])
+                mid = tmp['row']
             else:
-                push(right , tmp.row)
+                push(right , tmp['row'])
         return left , right , A , B , mid , c
         
     
@@ -376,7 +376,7 @@ def rnd(n, nPlaces=3):
 # n,n;  find x,y from a line connecting `a` to `b`
 def cosine(a, b, c):
     x1 = (a**2 + c**2 - b**2) / (2*c)
-    x2 = math.max(0, math.min(1, x1))
+    x2 = max(0, min(1, x1))
     y = (a**2 - x2**2)**.5
     return x2, y
 
@@ -629,9 +629,18 @@ if __name__=='__main__':
         data = DATA(the["file"])
         left, right, A, B, mid, c = data.half()
         print(str(len(left))+"   "+str(len(left))+" "+str(len(data.rows)))
-        print(o(A.cells)+"  "+str(c))
-        print(o(mid.cells))
-        print(o(B.cells))
+        tmpA = []
+        for num in A.cells.values():
+            tmpA.append(str(num))
+        print('{' + ' '.join(tmpA) + '}     '+str(c))
+        tmpmid = []
+        for num in mid.cells.values():
+            tmpmid.append(str(num))
+        print('{' + ' '.join(tmpmid) + '}')
+        tmpB = []
+        for num in B.cells.values():
+            tmpB.append(str(num))
+        print('{' + ' '.join(tmpB) + '}')
     eg("half", "1-level bi-clustering", halffun)
 
     def clusterfun():
