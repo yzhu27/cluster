@@ -260,8 +260,10 @@ class DATA:
         return res
     
     def better(self , row1 , row2):
-        s1 , s2 , ys = 0 , 0 , self.cols.y
-        for _ , col in ys:
+        s1 = 0
+        s2 = 0
+        ys = self.cols.y
+        for _ , col in ys.items():
             x = col.norm(row1.cells[col.at])
             y = col.norm(row2.cells[col.at])
             s1 -= math.exp(col.w * (x - y) / len(ys))
@@ -299,12 +301,12 @@ class DATA:
         
         rows = kwargs['rows'] if 'rows' in kwargs else self.rows
         some = many(rows , the['Sample'])
-        A = kwargs['above'] if 'above' in kwargs else any(some)
+        A = kwargs['above'] if ('above' in kwargs and kwargs['above']) else any(some)
         B = self.around(row1=A , rows=some)[int(the['Far'] * len(rows) // 1)]['row']
         c = dist(A , B)
         left , right = {} , {}
         for n , tmp in enumerate(sort(list(map(rows , project).values()) , lt('dist'))):
-            if n <= len(rows) // 2:
+            if n < len(rows) // 2:
                 push(left , tmp['row'])
                 mid = tmp['row']
             else:
@@ -319,37 +321,39 @@ class DATA:
         node = {}
         node['data'] = self.clone(rows)
         if len(rows) > 2 * min:
-            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows=rows , cols=cols , above=kwargs['above'] if 'above' in kwargs else None)
-            node['left'] = self.cluster(left , min , cols , node['A'])
-            node['right'] = self.cluster(right , min , cols , node['B'])
+            left , right , node['A'] , node['B'] , node['mid'], _ = self.half(rows=rows , cols=cols , above=kwargs['above'] if 'above' in kwargs else None)
+            node['left'] = self.cluster(rows=left , min=min , cols=cols , above=node['A'])
+            node['right'] = self.cluster(rows=right , min=min , cols=cols , above=node['B'])
         return node
     
-    def sway(self , rows , min , cols , above):
-        rows = rows or self.rows
-        min = min or len(rows) ** the['min']
-        cols = cols or self.cols.x
+    def sway(self , **kwargs):
+        rows = kwargs['rows'] if 'rows' in kwargs else self.rows
+        min = kwargs['min'] if 'min' in kwargs else len(rows) ** the['min']
+        cols = kwargs['cols'] if 'cols' in kwargs else self.cols.x
         node = {}
         node['data'] = self.clone(rows)
         if len(rows) > 2 * min:
-            left , right , node['A'] , node['B'] , node['mid'] = self.half(rows , cols , above)
+            left , right , node['A'] , node['B'] , node['mid'], _ = self.half(rows=rows , cols=cols , above=kwargs['above'] if 'above' in kwargs else None)
             if self.better(node['B'] , node['A']):
                 left , right , node['A'] , node['B'] = right , left , node['B'] , node['A']
-            node['left'] = self.sway(left , min , cols , node['A'])
+            node['left'] = self.sway(rows=left , min=min , cols=cols , above=node['A'])
         return node
 
        
 ## Misc
 
-def show(node, what, cols, nPlaces, *lvl):
+def show(node, what, cols, nPlaces, lvl:int=None):
     if node:
-        lvl = lvl or 0
-        res = '| ' * lvl + len(node['data'].rows) + '  '
-        if not node['left'] or lvl == 0:
+        lvl = lvl if lvl is not None else 0
+        res = '| ' * lvl + str(len(node['data'].rows)) + '  '
+        if 'left' not in node or lvl == 0:
             print(res + o(node['data'].stats("mid",node['data'].cols.y,nPlaces)))
         else:
             print(res)
-        show(node['left'], what, cols, nPlaces, lvl+1)
-        show(node['right'], what, cols, nPlaces, lvl+1)
+        if 'left' in node:
+            show(node['left'], what, cols, nPlaces, lvl+1)
+        if 'right' in node:
+            show(node['right'], what, cols, nPlaces, lvl+1)
 
 
 ## Numerics 
@@ -628,7 +632,7 @@ if __name__=='__main__':
     def halffun():
         data = DATA(the["file"])
         left, right, A, B, mid, c = data.half()
-        print(str(len(left))+"   "+str(len(left))+" "+str(len(data.rows)))
+        print(str(len(left))+"   "+str(len(right))+"   "+str(len(data.rows)))
         tmpA = []
         for num in A.cells.values():
             tmpA.append(str(num))
