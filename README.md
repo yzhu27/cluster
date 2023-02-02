@@ -25,8 +25,7 @@ Some functions:
 And some test examples
 
 ## Result:
-* [Expected result](https://github.com/timm/tested/blob/main/etc/out/cluster.out)
-or [here](https://github.com/yzhu27/cluster/blob/main/etc/out/cluster.out):
+* [Expected result](https://github.com/timm/tested/blob/main/etc/out/cluster.out):
 
 ![result img]()
 
