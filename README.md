@@ -27,7 +27,7 @@ And some test examples
 ## Result:
 * [Expected result](https://github.com/timm/tested/blob/main/etc/out/cluster.out):
 
-![result img]()
+![result img](./etc/images/expected_result.png)
 
 * [Result](https://github.com/yzhu27/cluster/blob/main/etc/out/cluster.out):
 
