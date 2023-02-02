@@ -279,7 +279,7 @@ class DATA:
             d += col.dist(row1.cells[col.at] , row2.cells[col.at]) ** the['p']
         return (d / n) ** (1 / the['p']) 
 
-    def around(self , row1 , *rows , **cols): #--> list[dict{row: , dist: }]
+    def around(self , row1 , rows=None , cols=None): #--> list[dict{row: , dist: }]
         def fun(row2):
             dic = {}
             dic['row'] = row2
@@ -382,7 +382,7 @@ def rnd(n, nPlaces=3):
 def cosine(a, b, c):
     x1 = (a**2 + c**2 - b**2) / (2*c)
     x2 = max(0, min(1, x1))
-    y = math.sqrt(a**2 - x2**2)
+    y = math.sqrt(abs(a**2 - x2**2))
     return x2, y
 
 ## Lists
@@ -426,7 +426,7 @@ def push(t:dict, x):
 
 # x; returns one items at random
 def any(t):
-    return list(t.values())[rint(len(t)-1 , 1) - 1]
+    return list(t.values())[rint(len(t),1)-1]
 
 # t1; returns some items from `t`
 def many(t, n):
